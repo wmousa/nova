@@ -1713,6 +1713,8 @@ class LibvirtConfigGuestInterface(LibvirtConfigGuestDevice):
         self.vlan = None
         self.device_addr = None
         self.mtu = None
+        self.vhost_net_alias = ''
+        self.vdpa = False
 
     def __eq__(self, other):
         if not isinstance(other, LibvirtConfigGuestInterface):
@@ -1797,6 +1799,10 @@ class LibvirtConfigGuestInterface(LibvirtConfigGuestDevice):
             dev.append(etree.Element("source", type=self.vhostuser_type,
                                      mode=self.vhostuser_mode,
                                      path=self.vhostuser_path))
+            if self.vdpa:
+                if self.vhost_net_alias:
+                    dev.append(etree.Element("alias", name=self.vhost_net_alias))
+
         elif self.net_type == "bridge":
             dev.append(etree.Element("source", bridge=self.source_dev))
             if self.script is not None:
@@ -2860,7 +2866,6 @@ class LibvirtConfigGuest(LibvirtConfigObject):
     def _format_qemu_args(self, root):
         for qemu_arg in self.qemu_args:
             root.append(qemu_arg.format_dom())
-
 
     def _format_idmaps(self, root):
         if len(self.idmaps) == 0:
