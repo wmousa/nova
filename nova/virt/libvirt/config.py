@@ -1767,6 +1767,8 @@ class LibvirtConfigGuestInterface(LibvirtConfigGuestDevice):
                 drv_elem.set('rx_queue_size', str(self.vhost_rx_queue_size))
             if self.vhost_tx_queue_size is not None:
                 drv_elem.set('tx_queue_size', str(self.vhost_tx_queue_size))
+            if self.vdpa:
+                drv_elem.set('page_per_vq', 'on')
 
             if (drv_elem.get('name') or drv_elem.get('queues') or
                 drv_elem.get('rx_queue_size') or
