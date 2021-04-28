@@ -6029,18 +6029,15 @@ class LibvirtDriver(driver.ComputeDriver):
                 flavor, virt_type, self._host)
             guest.add_device(config)
             if vif.get("vnic_type") == network_model.VNIC_TYPE_VIRTIO_FORWARDER:
-
-                # Enable page-per-vq for virtio-forwarder interface
-                args_dict = {"page-per-vq": "on"}
                 if (vif.get("network") and vif.get("network").get("meta") and
                         vif.get("network").get("meta").get("mtu")):
 
                     # As a workaround, we have to set mtu_host in xml file for
                     # virtio-forwarder interface, we may revist it if needed
-                    args_dict["host_mtu"] = vif["network"]["meta"]["mtu"]
-                qemu_args = self._get_guest_qemu_commandline(config.vhost_net_alias,
-                                                             **args_dict)
-                guest.qemu_args.append(qemu_args)
+                    args_dict = {"host_mtu": vif["network"]["meta"]["mtu"]}
+                    qemu_args = self._get_guest_qemu_commandline(config.vhost_net_alias,
+                                                                 **args_dict)
+                    guest.qemu_args.append(qemu_args)
 
         self._create_consoles(virt_type, guest, instance, flavor, image_meta)
 
