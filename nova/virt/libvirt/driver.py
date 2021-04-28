@@ -5828,14 +5828,13 @@ class LibvirtDriver(driver.ComputeDriver):
         for config in storage_configs:
             guest.add_device(config)
 
-        net_index = 0
         for vif in network_info:
             config = self.vif_driver.get_config(
                 instance, vif, image_meta,
                 flavor, virt_type, self._host)
             guest.add_device(config)
+            if vif.get("vnic_type") == network_model.VNIC_TYPE_VIRTIO_FORWARDER:
 
-            if vif.get("vnic_type") == "virtio-forwarder":
                 # Enable page-per-vq for virtio-forwarder interface
                 args_dict = {"page-per-vq": "on"}
                 if (vif.get("network") and vif.get("network").get("meta") and
@@ -5844,15 +5843,9 @@ class LibvirtDriver(driver.ComputeDriver):
                     # As a workaround, we have to set mtu_host in xml file for
                     # virtio-forwarder interface, we may revist it if needed
                     args_dict["host_mtu"] = vif["network"]["meta"]["mtu"]
-                qemu_args = self._get_guest_qemu_commandline("net%d"
-                                                             % net_index,
+                qemu_args = self._get_guest_qemu_commandline(config.vhost_net_alias,
                                                              **args_dict)
                 guest.qemu_args.append(qemu_args)
-            if vif.get("vnic_type") in ["virtio-forwarder", "normal", "macvtap"]:
-                # As the alias name of virtio-forwarder, macvtap and normal
-                # ports will be in the same format as net[0-9]*,
-                # so we are increasing the net index here
-                net_index += 1
 
         self._create_consoles(virt_type, guest, instance, flavor, image_meta)
 
