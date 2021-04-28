@@ -504,7 +504,7 @@ class LibvirtGenericVIFDriver(object):
         conf.target_dev = vif.vif_name
         self._set_config_VIFPortProfile(instance, vif, conf)
 
-    def _set_config_VIFVHostUser(self, instance, vif, conf, host=None):
+    def _set_config_VIFVHostUser(self, instance, vif, conf, host=None, vnic_type=""):
         # TODO(sahid): We should never configure a driver backend for
         # vhostuser interface. Specifically override driver to use
         # None. This can be removed when get_base_config will be fixed
@@ -512,8 +512,14 @@ class LibvirtGenericVIFDriver(object):
         conf.driver_name = None
 
         rx_queue_size, tx_queue_size = self._get_virtio_queue_sizes(host)
-        designer.set_vif_host_backend_vhostuser_config(
-            conf, vif.mode, vif.path, rx_queue_size, tx_queue_size)
+        if vnic_type == network_model.VNIC_TYPE_VIRTIO_FORWARDER:
+            net_alias = "ua-vdpa-%s" % vif.id[:12]
+            designer.set_vif_host_backend_vhostuser_config(
+                conf, vif.mode, vif.path, rx_queue_size, tx_queue_size,
+                net_alias, vdpa=True)
+        else:
+            designer.set_vif_host_backend_vhostuser_config(
+                conf, vif.mode, vif.path, rx_queue_size, tx_queue_size)
 
     def _set_config_VIFHostDevice(self, instance, vif, conf, host=None):
         if vif.dev_type == osv_fields.VIFHostDeviceDevType.ETHERNET:
@@ -573,7 +579,7 @@ class LibvirtGenericVIFDriver(object):
         elif isinstance(vif, osv_vifs.VIFOpenVSwitch):
             self._set_config_VIFOpenVSwitch(instance, vif, conf, host)
         elif isinstance(vif, osv_vifs.VIFVHostUser):
-            self._set_config_VIFVHostUser(instance, vif, conf, host)
+            self._set_config_VIFVHostUser(instance, vif, conf, host, vnic_type)
         elif isinstance(vif, osv_vifs.VIFHostDevice):
             self._set_config_VIFHostDevice(instance, vif, conf, host)
         else:

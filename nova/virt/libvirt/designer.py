@@ -144,7 +144,8 @@ def set_vif_host_backend_direct_config(conf, devname, mode="passthrough"):
 
 
 def set_vif_host_backend_vhostuser_config(conf, mode, path, rx_queue_size,
-                                          tx_queue_size):
+                                          tx_queue_size, net_alias=None,
+                                          vdpa=False):
     """Populate a LibvirtConfigGuestInterface instance
     with host backend details for vhostuser socket.
 
@@ -158,6 +159,9 @@ def set_vif_host_backend_vhostuser_config(conf, mode, path, rx_queue_size,
         conf.vhost_rx_queue_size = rx_queue_size
     if tx_queue_size:
         conf.vhost_tx_queue_size = tx_queue_size
+    if vdpa:
+        conf.vdpa = True
+        conf.vhost_net_alias = net_alias
 
 
 def set_vif_mtu_config(conf, mtu):
