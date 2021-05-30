@@ -1767,6 +1767,8 @@ class LibvirtConfigGuestInterface(LibvirtConfigGuestDevice):
                 drv_elem.set('rx_queue_size', str(self.vhost_rx_queue_size))
             if self.vhost_tx_queue_size is not None:
                 drv_elem.set('tx_queue_size', str(self.vhost_tx_queue_size))
+            if self.vdpa:
+                drv_elem.set('page_per_vq', 'on')
 
             if (drv_elem.get('name') or drv_elem.get('queues') or
                 drv_elem.get('rx_queue_size') or
@@ -1799,9 +1801,8 @@ class LibvirtConfigGuestInterface(LibvirtConfigGuestDevice):
             dev.append(etree.Element("source", type=self.vhostuser_type,
                                      mode=self.vhostuser_mode,
                                      path=self.vhostuser_path))
-            if self.vdpa:
-                if self.vhost_net_alias:
-                    dev.append(etree.Element("alias", name=self.vhost_net_alias))
+            if self.vdpa and self.vhost_net_alias:
+                dev.append(etree.Element("alias", name=self.vhost_net_alias))
 
         elif self.net_type == "bridge":
             dev.append(etree.Element("source", bridge=self.source_dev))
