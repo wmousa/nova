@@ -1803,20 +1803,6 @@ class LibvirtConfigGuestChannelTest(LibvirtConfigBaseTest):
             </channel>""" % obj.source_path)
 
 
-class LibvirtConfigQemuCommandLineTest(LibvirtConfigBaseTest):
-    def test_config_qemu_command_line(self):
-        obj = config.LibvirtConfigQemuCommandLine()
-        obj.net_alias_name = "net0"
-        obj.args = {"host_mtu": 9000}
-        xml = obj.to_xml()
-        self.assertXmlEqual(xml, """
-            <qemu:commandline xmlns:qemu='http://libvirt.org/schemas/domain/qemu/1.0'>
-                <qemu:arg value='-set'/>
-                <qemu:arg value='device.net0.host_mtu=9000'/>
-            </qemu:commandline>
-            """)
-
-
 class LibvirtConfigGuestInterfaceTest(LibvirtConfigBaseTest):
     def test_config_ethernet(self):
         obj = config.LibvirtConfigGuestInterface()

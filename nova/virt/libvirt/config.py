@@ -82,30 +82,6 @@ class LibvirtConfigObject(object):
         return xml_str
 
 
-class LibvirtConfigQemuCommandLine(LibvirtConfigObject):
-
-    def __init__(self, **kwargs):
-        super(LibvirtConfigQemuCommandLine, self).__init__(
-            root_name='commandline', ns_prefix="qemu",
-            ns_uri='http://libvirt.org/schemas/domain/qemu/1.0',
-            **kwargs)
-        self.args = {}
-        self.net_alias_name = ""
-
-    def format_dom(self):
-        domain = super(LibvirtConfigQemuCommandLine, self).format_dom()
-        for arg,value in self.args.items():
-            set_arg = self._new_node("arg")
-            set_arg.set("value", "-set")
-            domain.append(set_arg)
-            new_arg = self._new_node("arg")
-            new_arg.set("value", "device.%s.%s=%s" % (self.net_alias_name,
-                                                      arg, value))
-            domain.append(new_arg)
-
-        return domain
-
-
 class LibvirtConfigCaps(LibvirtConfigObject):
 
     def __init__(self, **kwargs):
@@ -1769,6 +1745,7 @@ class LibvirtConfigGuestInterface(LibvirtConfigGuestDevice):
                 drv_elem.set('tx_queue_size', str(self.vhost_tx_queue_size))
             if self.vdpa:
                 drv_elem.set('page_per_vq', 'on')
+                dev.append(etree.Element("mtu", size=str(self.mtu)))
 
             if (drv_elem.get('name') or drv_elem.get('queues') or
                 drv_elem.get('rx_queue_size') or
@@ -2780,7 +2757,6 @@ class LibvirtConfigGuest(LibvirtConfigObject):
         self.idmaps = []
         self.perf_events = []
         self.launch_security = None
-        self.qemu_args = []
 
     def _format_basic_props(self, root):
         root.append(self._text_node("uuid", self.uuid))
@@ -2864,10 +2840,6 @@ class LibvirtConfigGuest(LibvirtConfigObject):
             devices.append(dev.format_dom())
         root.append(devices)
 
-    def _format_qemu_args(self, root):
-        for qemu_arg in self.qemu_args:
-            root.append(qemu_arg.format_dom())
-
     def _format_idmaps(self, root):
         if len(self.idmaps) == 0:
             return
@@ -2918,8 +2890,6 @@ class LibvirtConfigGuest(LibvirtConfigObject):
         self._format_perf_events(root)
 
         self._format_sev(root)
-
-        self._format_qemu_args(root)
 
         return root
 

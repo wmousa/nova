@@ -4987,13 +4987,6 @@ class LibvirtDriver(driver.ComputeDriver):
 
         return dev
 
-    def _get_guest_qemu_commandline(self, net_alias, **kwargs):
-        qemu_config = vconfig.LibvirtConfigQemuCommandLine()
-        qemu_config.net_alias_name = net_alias
-        qemu_config.args = kwargs
-
-        return qemu_config
-
     def _get_guest_config_meta(self, instance):
         """Get metadata config for guest."""
 
@@ -6182,17 +6175,6 @@ class LibvirtDriver(driver.ComputeDriver):
                 instance, vif, image_meta, flavor, virt_type,
             )
             guest.add_device(config)
-            if vif.get("vnic_type") == network_model.VNIC_TYPE_VIRTIO_FORWARDER:
-                if (vif.get("network") and vif.get("network").get("meta") and
-                        vif.get("network").get("meta").get("mtu")):
-
-                    # As a workaround, we have to set mtu_host in xml file for
-                    # virtio-forwarder interface, we may revist it if needed
-                    args_dict = {"host_mtu": vif["network"]["meta"]["mtu"]}
-                    qemu_args = self._get_guest_qemu_commandline(config.vhost_net_alias,
-                                                                 **args_dict)
-
-                    guest.qemu_args.append(qemu_args)
 
         self._create_consoles(virt_type, guest, instance, flavor, image_meta)
 
