@@ -26,6 +26,7 @@ from nova import exception
 from nova.i18n import _
 from nova.network import model
 
+from vif_plug_ovs import linux_net
 
 LOG = logging.getLogger(__name__)
 CONF = cfg.CONF
@@ -326,8 +327,19 @@ def _nova_to_osvif_vif_bridge(vif):
 
 # VIF_TYPE_OVS = 'ovs'
 def _nova_to_osvif_vif_ovs(vif):
-    vif_name = _get_vif_name(vif)
+    vif_name = ""
     vnic_type = vif.get('vnic_type', model.VNIC_TYPE_NORMAL)
+    if vnic_type == model.VNIC_TYPE_VIRTIO_FORWARDER:
+        # set the vif_name to be the vf representor device,
+        # as it will be target_dev of vdpa ports in the xml file
+        pci_slot = vif["profile"]['pci_slot']
+        vf_num = linux_net.get_vf_num_by_pci_address(pci_slot)
+        pf_ifname = linux_net.get_ifname_by_pci_address(
+            pci_slot, pf_interface=True, switchdev=True)
+        vif_name = linux_net.get_representor_port(pf_ifname, vf_num)
+    else:
+        vif_name = _get_vif_name(vif)
+
     profile = objects.vif.VIFPortProfileOpenVSwitch(
         interface_id=vif.get('ovs_interfaceid') or vif['id'],
         datapath_type=vif['details'].get(
